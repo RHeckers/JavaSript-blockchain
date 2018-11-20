@@ -82,7 +82,15 @@ app.post('/register-and-broadcast-node', (req, res) => {
 });
 
 app.post('register-node', (req, res) => {
+    const newNodeURL = req.body.newNodeURL;
+    const nodeNotAlreadyPresent = bitcoin.networkNodes.indexOf(newNodeURL) == -1;
+    const notCurrentNode = bitcoin.currentNodeURL !== newNodeURL;
+    
+    if(nodeNotAlreadyPresent && notCurrentNode) bitcoin.networkNodes.push(newNodeURL);
 
+    res.json({
+        note: "New node registered successfully."
+    });
 });
 
 app.post('register-nodes-bulk', (req, res) => {
