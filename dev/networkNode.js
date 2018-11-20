@@ -74,29 +74,43 @@ app.post('/register-and-broadcast-node', (req, res) => {
 
         return requestPromise(bulkRegOptions);
     }).then(data => {
-        console.log(data);
         res.json({
             note: "New node successfully registered to the network"
         })
     });
 });
 
-app.post('register-node', (req, res) => {
+app.post('/register-node', (req, res) => {
     const newNodeURL = req.body.newNodeURL;
-    const nodeNotAlreadyPresent = bitcoin.networkNodes.indexOf(newNodeURL) == -1;
-    const notCurrentNode = bitcoin.currentNodeURL !== newNodeURL;
     
-    if(nodeNotAlreadyPresent && notCurrentNode) bitcoin.networkNodes.push(newNodeURL);
+    if(notPresentAndNotCurrent(newNodeURL)) bitcoin.networkNodes.push(newNodeURL);
 
     res.json({
         note: "New node registered successfully."
     });
 });
 
-app.post('register-nodes-bulk', (req, res) => {
+app.post('/register-nodes-bulk', (req, res) => {
+    const allNetworkNodes = req.body.allNetworkNodes;
 
+    allNetworkNodes.forEach(node => {
+        if(notPresentAndNotCurrent(node)) bitcoin.networkNodes.push(node);
+    });
+
+    res.json({ note: 'Bulk registered successfull'});
 });
 
 app.listen(port, () => {
     console.log(`Listening on port ${port}...`);
 });
+
+notPresentAndNotCurrent = (node, newNodeURL=null) => {
+    const nodeNotAlreadyPresent = bitcoin.networkNodes.indexOf(node) == -1;
+    let notCurrentNode;
+    if(newNodeURL !== null){
+        notCurrentNode = bitcoin.currentNodeURL !== newNodeURL;
+    }else{
+        notCurrentNode = bitcoin.currentNodeURL !== node;        
+    }
+    if(nodeNotAlreadyPresent && notCurrentNode) return true;
+}
