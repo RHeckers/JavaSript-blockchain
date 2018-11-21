@@ -63,40 +63,48 @@ app.get('/mine', (req, res) => {
 });
 
 app.get('/consensus', (req, res) => {
-    const promiseArr = []
-    bitcoin.networkNodes.forEach(nodeURL => {
-        const requestOptions = {
-            uri: nodeURL + '/blockchain',
-            methond: 'GET',
-            json: true
-        }
+	const requestPromises = [];
+	bitcoin.networkNodes.forEach(networkNodeUrl => {
+		const requestOptions = {
+			uri: networkNodeUrl + '/blockchain',
+			method: 'GET',
+			json: true
+		};
 
-        promiseArr.push(requestPromise(requestOptions));
-    });
-    
+		requestPromises.push(requestPromise(requestOptions));
+	});
 
-    Promise.all(promiseArr).then(blockchains => {
-        const currentChainLength = bitcoin.chain.length;
-        let maxChainLength = currentChainLength;
-        let newLongestChain = null;
-        let newPendingTransactions = null;
+	Promise.all(requestPromises)
+	.then(blockchains => {
+		const currentChainLength = bitcoin.chain.length;
+		let maxChainLength = currentChainLength;
+		let newLongestChain = null;
+		let newPendingTransactions = null;
 
-        blockchains.forEach(chain => {
-            if(chain.chain.length > maxChainLength){
-                maxChainLength = chain.chain.length;
-                newLongestChain = chain.chain;
-                newPendingTransactions = chain.pendingTransactions;
-            };
-        });
+		blockchains.forEach(blockchain => {
+			if (blockchain.chain.length > maxChainLength) {
+				maxChainLength = blockchain.chain.length;
+				newLongestChain = blockchain.chain;
+				newPendingTransactions = blockchain.pendingTransactions;
+			};
+		});
 
-        if(!newLongestChain || (newLongestChain && !bitcoin.chainIsValid(newLongestChain))){
-            res.json({ note: "Current chain has not bin replaced", chain: bitcoin.chain });
-        }else{
-            bitcoin.chain = newLongestChain;
-            bitcoin.pendingTransactions = newPendingTransactions;
-            res.json({ note: "Current chain has bin replaced", chain: bitcoin.chain });
-        }
-    });
+
+		if (!newLongestChain || (newLongestChain && !bitcoin.chainIsValid(newLongestChain))) {
+			res.json({
+				note: 'Current chain has not been replaced.',
+				chain: bitcoin.chain
+			});
+		}
+		else {
+			bitcoin.chain = newLongestChain;
+			bitcoin.pendingTransactions = newPendingTransactions;
+			res.json({
+				note: 'This chain has been replaced.',
+				chain: bitcoin.chain
+			});
+		}
+	});
 });
 
 app.post('/receive-new-block', (req, res) => {

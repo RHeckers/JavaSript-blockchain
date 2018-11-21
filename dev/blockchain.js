@@ -63,7 +63,7 @@ class Blockchain {
         let nonce = 0;
         let hash = this.hashBlock(prevBlockHash, currentBlockData, nonce);
 
-        while(hash.substr(0, 4) !== '0000'){
+        while(hash.substring(0, 4) !== '0000'){
             nonce++;
             hash = this.hashBlock(prevBlockHash, currentBlockData, nonce);
         }
@@ -74,23 +74,32 @@ class Blockchain {
     chainIsValid(blockchain){
         let validChain = true;
 
-        for(let i = 1; i < blockchain.length; i++){
+        for (var i = 1; i < blockchain.length; i++) {
             const currentBlock = blockchain[i];
+            console.log('Current block = ', currentBlock)
             const prevBlock = blockchain[i - 1];
-            const blockHash = this.blockHash(prevBlock['hash'], { transactions: currentBlock['transactions'], index: currentBlock['index'] }, currentBlock['nonce']);
+            const blockHash = this.hashBlock(prevBlock['hash'], { transactions: currentBlock['transactions'], index: currentBlock['index'] }, currentBlock['nonce']);
+            
+            console.log("One", validChain);
 
-            if(blockHash.substr(0, 4) !== '0000') validChain = false;
-            if(currentBlock['prevBlockHash'] !== prevBlock['hash']) validChain = false;
+            if (blockHash.substring(0, 4) !== '0000') validChain = false;
+            console.log("Two",validChain);
+            
+            console.log(currentBlock['prevBlockHash'], prevBlock['hash'])
+            if (currentBlock['prevBlockHash'] !== prevBlock['hash']) validChain = false;
+            console.log("Three", validChain);
+
         };
-
-        const genisisBlock = blockchain[0];
-        const correctNonce = genisisBlock['nonce'] === 100
-        const correctPrevBlockHash = genisisBlock['prevBlockHash'] === 0;
-        const correctBlockHash = genisisBlock['hash'] === 0;
-        const correctTransactions = genisisBlock['transactions'].length === 0;
-
-        if(!correctNonce || !correctPrevBlockHash || !correctBlockHash || !correctTransactions) validChain = false;
-
+    
+        const genesisBlock = blockchain[0];
+        const correctNonce = genesisBlock['nonce'] === 100;
+        const correctPreviousBlockHash = genesisBlock['prevBlockHash'] === '0';
+        const correctHash = genesisBlock['hash'] === '0';
+        const correctTransactions = genesisBlock['transactions'].length === 0;
+    
+        if (!correctNonce || !correctPreviousBlockHash || !correctHash || !correctTransactions) validChain = false;
+        console.log("Four", validChain);
+        
         return validChain;
     }
 
