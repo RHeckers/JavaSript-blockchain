@@ -212,9 +212,38 @@ app.post('/register-nodes-bulk', (req, res) => {
 });
 
 
+//Explorer routes below
+app.get('/block/:blockHash', (req, res) => {
+    const blockHash = req.params.blockHash;
+	const correctBlock = bitcoin.getBlock(blockHash);
+	res.json({
+		block: correctBlock
+	});
 
+});
 
+app.get('/transaction/:transactionId', (req, res) => {
+    const transactionId = req.params.transactionId;
+	const trasactionData = bitcoin.getTransaction(transactionId);
+	res.json({
+		transaction: trasactionData.transaction,
+		block: trasactionData.block
+	});
 
+});
+
+app.get('/address/:addresss', (req, res) => {
+    const address = req.params.address;
+	const addressData = bitcoin.getAddressData(address);
+	res.json({
+		addressData: addressData
+	});
+
+});
+
+app.get('/block-explorer', (req, res) => {
+	res.sendFile('./block-explorer/index.html', { root: __dirname });
+});
 
 
 app.listen(port, () => {
