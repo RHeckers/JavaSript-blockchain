@@ -56,12 +56,10 @@ app.get('/mine', (req, res) => {
 
     }).then(data => {
         res.json({
-            note: "New block mined successfully",
+            note: "New block mined and broadcasted successfully",
             block: newBlock
         });
-
     });
-    
 });
 
 app.post('/transaction', (req, res) => {
