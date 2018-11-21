@@ -54,12 +54,12 @@ app.get('/mine', (req, res) => {
 
         return requestPromise(requestOptions);
 
-    });
+    }).then(data => {
+        res.json({
+            note: "New block mined successfully",
+            block: newBlock
+        });
 
-
-    res.json({
-        note: "New block mined successfully",
-        block: newBlock
     });
     
 });
