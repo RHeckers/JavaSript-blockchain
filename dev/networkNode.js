@@ -26,12 +26,36 @@ app.get('/mine', (req, res) => {
     }
 
     const nonce = bitcoin.proofOfWork(lastBlockHash, currentBlockData);
-
     const blockHash = bitcoin.hashBlock(lastBlock, currentBlockData, nonce);
-
-    bitcoin.createNewTransaction(12.5, "00", nodeAddress);
-
     const newBlock = bitcoin.createNewBlock(nonce, lastBlockHash, blockHash);
+    const promiseArr = [];
+
+    bitcoin.networkNodes.forEach(nodeURL => {
+        const requestOptions = {
+            uri: nodeURL + '/receive-new-block',
+            method: 'POST',
+            body: { newBlock: newBlock },
+            json: true
+        }
+        promiseArr.push(requestPromise(requestOptions));
+    });
+
+    Promise.all(promiseArr).then(data => {
+        const requestOptions = {
+            uri: bitcoin.currentNodeURL + '/transaction/broadcast',
+            method: 'POST',
+            body: { 
+                amount: '12.5',
+                sender: '00',
+                recipient: nodeAddress
+            },
+            json: true
+        };
+
+        return requestPromise(requestOptions);
+
+    });
+
 
     res.json({
         note: "New block mined successfully",
@@ -43,7 +67,7 @@ app.get('/mine', (req, res) => {
 app.post('/transaction', (req, res) => {
         const newTransaction = req.body;
         const blockIndex = bitcoin.addTransactionToPending(newTransaction);
-
+        console.log(123)
         res.json({ note: `Transaction will be added in Block ${blockIndex}`});
 });
 
@@ -51,12 +75,13 @@ app.post('/transaction/broadcast', (req, res) => {
     const newTransaction = bitcoin.createNewTransaction(req.body.amount, req.body.sender, req.body.recipient);
     bitcoin.addTransactionToPending(newTransaction);
 
+    console.log(bitcoin.networkNodes)
     const requestPromises = [];
     bitcoin.networkNodes.forEach(nodeURL => {
         const requestOptions = {
-            URI: nodeURL + '/transaction',
+            uri: nodeURL + '/transaction',
             method: 'POST',
-            body: newTransaction,
+            body: { newTransaction: newTransaction},
             json: true
         };
 
