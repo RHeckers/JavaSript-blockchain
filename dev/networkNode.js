@@ -241,7 +241,7 @@ app.get('/address/:addresss', (req, res) => {
 
 });
 
-app.get('/block-explorer', (req, res) => {
+app.get('/', (req, res) => {
 	res.sendFile('./block-explorer/index.html', { root: __dirname });
 });
 
