@@ -41,9 +41,33 @@ app.get('/mine', (req, res) => {
 });
 
 app.post('/transaction', (req, res) => {
-    const blockIndex = bitcoin.createNewTransaction(req.body.amount, req.body.sender, req.body.recipient);
-    res.json({ note: `Transaction will be added in block ${blockIndex}.`});
-    
+        const newTransaction = req.body;
+        const blockIndex = bitcoin.addTransactionToPending(newTransaction);
+
+        res.json({ note: `Transaction will be added in Block ${blockIndex}`});
+});
+
+app.post('/transaction/broadcast', (req, res) => {
+    const newTransaction = bitcoin.createNewTransaction(req.body.amount, req.body.sender, req.body.recipient);
+    bitcoin.addTransactionToPending(newTransaction);
+
+    const requestPromises = [];
+    bitcoin.networkNodes.forEach(nodeURL => {
+        const requestOptions = {
+            URI: nodeURL + '/transaction',
+            method: 'POST',
+            body: newTransaction,
+            json: true
+        };
+
+        requestPromises.push(requestPromise(requestOptions));
+    });
+
+    Promise.all(requestPromises).then(data => {
+        res.json({
+            note: "Boardcast was successfull!"
+        });
+    });
 });
 
 app.post('/register-and-broadcast-node', (req, res) => {
@@ -99,6 +123,12 @@ app.post('/register-nodes-bulk', (req, res) => {
 
     res.json({ note: 'Bulk registered successfull'});
 });
+
+
+
+
+
+
 
 app.listen(port, () => {
     console.log(`Listening on port ${port}...`);
