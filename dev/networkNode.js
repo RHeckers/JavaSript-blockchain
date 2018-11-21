@@ -59,13 +59,33 @@ app.get('/mine', (req, res) => {
             note: "New block mined and broadcasted successfully",
             block: newBlock
         });
-    });
+    }).catch(err => console.log(err));
 });
+
+app.post('/receive-new-block', (req, res) => {
+    const newBlock = req.body.newBlock;
+    const lastBlock = bitcoin.getLastBlock();
+    const isCorrectHash = lastBlock.hash === newBlock.prevBlockHash;
+    const isCorrectIndex = lastBlock['index'] + 1 === newBlock['index'];
+
+    if(isCorrectHash && isCorrectIndex){
+        bitcoin.chain.push(newBlock);
+        bitcoin.pendingTransactions = [];
+        res.json({ 
+            note: 'New Block Received and Accepted',
+            newBlock: newBlock
+        });
+    }else{
+        res.json({  
+            note: 'New Block Rejected',
+            newBlock: newBlock
+        });  
+    }
+})
 
 app.post('/transaction', (req, res) => {
         const newTransaction = req.body;
         const blockIndex = bitcoin.addTransactionToPending(newTransaction);
-        console.log(123)
         res.json({ note: `Transaction will be added in Block ${blockIndex}`});
 });
 
@@ -73,7 +93,6 @@ app.post('/transaction/broadcast', (req, res) => {
     const newTransaction = bitcoin.createNewTransaction(req.body.amount, req.body.sender, req.body.recipient);
     bitcoin.addTransactionToPending(newTransaction);
 
-    console.log(bitcoin.networkNodes)
     const requestPromises = [];
     bitcoin.networkNodes.forEach(nodeURL => {
         const requestOptions = {
@@ -90,7 +109,7 @@ app.post('/transaction/broadcast', (req, res) => {
         res.json({
             note: "Boardcast was successfull!"
         });
-    });
+    }).catch(err => console.log(err));
 });
 
 app.post('/register-and-broadcast-node', (req, res) => {
