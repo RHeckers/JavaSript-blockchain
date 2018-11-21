@@ -71,6 +71,29 @@ class Blockchain {
         return nonce;
     }
 
+    chainIsValid(blockchain){
+        let validChain = true;
+
+        for(let i = 1; i < blockchain.length; i++){
+            const currentBlock = blockchain[i];
+            const prevBlock = blockchain[i - 1];
+            const blockHash = this.blockHash(prevBlock['hash'], { transactions: currentBlock['transactions'], index: currentBlock['index'] }, currentBlock['nonce']);
+
+            if(blockHash.substr(0, 4) !== '0000') validChain = false;
+            if(currentBlock['prevBlockHash'] !== prevBlock['hash']) validChain = false;
+        };
+
+        const genisisBlock = blockchain[0];
+        const correctNonce = genisisBlock['nonce'] === 100
+        const correctPrevBlockHash = genisisBlock['prevBlockHash'] === 0;
+        const correctBlockHash = genisisBlock['hash'] === 0;
+        const correctTransactions = genisisBlock['transactions'].length === 0;
+
+        if(!correctNonce || !correctPrevBlockHash || !correctBlockHash || !correctTransactions) validChain = false;
+
+        return validChain;
+    }
+
 }
 
 module.exports = Blockchain;
